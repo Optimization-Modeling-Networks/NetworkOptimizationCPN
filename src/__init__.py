@@ -31,4 +31,4 @@ def start_simulation(simulation_clock):
 
 
 if __name__ == '__main__':
-    start_simulation(Clock(2))
+    start_simulation(Clock(1))

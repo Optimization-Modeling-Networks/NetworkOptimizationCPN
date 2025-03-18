@@ -10,7 +10,7 @@ class Clock:
         return f'\nCurrent time: {self.time} - Max time: {self.max_time}\n'
 
     def hasTime(self):
-        return self.time <= self.max_time
+        return self.time < self.max_time
 
     def increment(self):
         if self.hasTime():

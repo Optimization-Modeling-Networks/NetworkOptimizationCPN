@@ -1,4 +1,4 @@
-import math
+from math import ceil
 
 from utils import log_state, PacketType
 from cpn_config import cpn, MultiSet
@@ -18,41 +18,22 @@ def create_packets():
 
 def select_router(routers):
     def distribute_modes(router_list, probability):
-        remaining_modes = []
+        all_modes_size = len(cpn.transition(f'Select_Router_{router_list[0][0]}').modes())
         for router in router_list:
             transition = f'Select_Router_{router[0]}'
-            remaining_modes.append(cpn.transition(transition).modes())
-        first_router_modes = remaining_modes[0]
-        first_router_enabled = min(len(first_router_modes), math.ceil(len(first_router_modes) * probability))
-        for sub in first_router_modes[:first_router_enabled]:
-            cpn.transition(f'Select_Router_{router_list[0]}').fire(sub)
-        remaining_substitutions = sum(len(modes) for modes in remaining_modes) - first_router_enabled
-        remaining_routers = router_list[1:]
-        for router, modes in zip(remaining_routers, remaining_modes[1:]):
-            router_enabled = min(len(modes), math.ceil(remaining_substitutions / len(remaining_routers)))
-            for sub in modes[:router_enabled]:
-                cpn.transition(f'Select_Router_{router[0]}').fire(sub)
-            remaining_substitutions -= router_enabled
-            remaining_routers = remaining_routers[1:]
+            modes = cpn.transition(transition).modes()
+            enabled_index = all_modes_size * probability
+            enabled_modes = modes[:min(len(modes), ceil(enabled_index))]
+            for sub in enabled_modes:
+                cpn.transition(transition).fire(sub)
 
-    tcp_probability = random()
-    udp_probability = random()
     tcp_routers = [r for r in routers if r[1] == PacketType.TCP]
     udp_routers = [r for r in routers if r[1] == PacketType.UDP]
+    tcp_probability = 1 / len(tcp_routers)
+    udp_probability = 1 / len(udp_routers)
     distribute_modes(tcp_routers, tcp_probability)
     distribute_modes(udp_routers, udp_probability)
 
-    # for router in routers:
-    #     transition = f'Select_Router_{router[0]}'
-    #     modes = cpn.transition(transition).modes()
-    #     if router[1] == PacketType.TCP:
-    #         enabled_modes = math.ceil(
-    #             len(modes) * tcp_probability)
-    #     else:
-    #         enabled_modes = math.ceil(
-    #             len(modes) * udp_probability)
-    #     for sub in modes[:min(len(modes), enabled_modes)]:
-    #         cpn.transition(transition).fire(sub)
     log_state("After Router Selection:")
 
 
